@@ -1,45 +1,41 @@
 <?php
-$apiKey = XXXXXXXXXXXXXXXXXXX;
-$apiUrl = "https://vision.google.com/v1/images:anotate?key=";
-$imageName = argv[0];
+$apiKey ="ｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘｘ";
+$apiUrl = "https://vision.googleapis.com/v1/images:annotate?key=";
+$imageName = $argv[1];
+$resultNum = 5;
 
-if(is_uploaded_file($imageName)){
-
-    $requestsArray = array(
-        "requests" =>array(
-            array(
-                "image" => array(
-                    "content" => base64_encode($imageName),
-                ),
-                "features" => array(
-                    array(
-                        "type" => "LABEL_DETECTION",
-                        "maxResults" => 5,
-                    ),
+$requestsArray = array(
+    "requests" =>array(
+        array(
+            "image" => array(
+                "content" => base64_encode(file_get_contents($imageName)),
+            ),
+            "features" => array(
+                array(
+                    "type" => "LABEL_DETECTION",
+                    "maxResults" => $resultNum,
                 ),
             ),
         ),
-    );
-    $requestsJson = json_encode($requestsArray);
+    ),
+);
+$requestsJson = json_encode($requestsArray);
 
-    $curl = curl_init();
-    curl_setopt($curl,CURLOPT_POSTFIELD,$requestsJson);
-    curl_setopt($curl,CURL_OPTURL,$apiUrl.$apiKey);
-    curl_setopt($curl,CURL_RETURNTRANSFER,true);
-    curl_setopt($curl,CURLOPT_HTTPHEADER,array("Content-Type: application/json"));
-    curl_setopt($curl,CURLOPT_TIMEOUT,10);
+$curl = curl_init();
+curl_setopt($curl,CURLOPT_CUSTOMREQUEST, "POST");
+curl_setopt($curl,CURLOPT_POSTFIELDS,$requestsJson);
+curl_setopt($curl,CURLOPT_URL,$apiUrl.$apiKey);
+curl_setopt($curl,CURLOPT_RETURNTRANSFER,true);
+curl_setopt($curl,CURLOPT_HTTPHEADER,array("Content-Type: application/json"));
+curl_setopt($curl,CURLOPT_TIMEOUT,10);
+curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,false);
 
-    $responseJson = curl_exec($curl);
-    $response = json_decode($responseJson,true);
-    
-    curl_close($curl);
+$responseJson = curl_exec($curl);
+$response = json_decode($responseJson,true);
 
-    echo $response["responses"][0]["labelAnotations"][0]["description"];
-    echo "\n";
-    
-}else{
-    echo "引数が正しくありません．";
+curl_close($curl);
+
+for($i = 0;$i < $resultNum;$i++){
+echo $response["responses"][0]["labelAnnotations"][$i]["description"]."\n";
 }
-
-
         
